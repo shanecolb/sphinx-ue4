@@ -5,4 +5,4 @@ When the plugin is activated, a speech recogntion actor becomes available, which
 I have included a demo asset within the content folder, to showcase an example of its usage.
 
 I would love any feedback/advice on the plugin.
-Feel free to either branch and change the code, or to contact me on my e-mail address (shane.colbert@gmail.com)
+Feel free to fork the code, or to contact me at shane.colbert@gmail.com
