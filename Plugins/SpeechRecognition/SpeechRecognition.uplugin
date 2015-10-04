@@ -1,0 +1,21 @@
+{
+	"FileVersion" : 3,
+	
+	"FriendlyName" : "Speech Recognition Plugin",
+	"Version" : 1,
+	"VersionName" : "1.0",
+	"CreatedBy" : "Shane Colbert",
+	"CreatedByURL" : "http://cmusphinx.sourceforge.net",
+	"EngineVersion" : "4.9.1",
+	"Description" : "A minimal implementation of the PocketSphinx library. This plugin is used for implementing simple Speech Recognition into your Unreal projects",
+	"Category" : "Audio",
+	"EnabledByDefault" : true,
+	
+	"Modules" :
+	[
+		{
+			"Name" : "SpeechRecognition",
+			"Type" : "Runtime"
+		}
+	]
+}
