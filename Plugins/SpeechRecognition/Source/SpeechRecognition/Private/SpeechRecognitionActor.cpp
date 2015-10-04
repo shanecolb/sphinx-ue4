@@ -29,5 +29,13 @@ void ASpeechRecognitionActor::AddWords(TArray<FString> wordList)
 
 void ASpeechRecognitionActor::WordSpoken_method(FString text)
 {
-	this->OnWordSpoken.Broadcast(text);
+	// TODO: Split by phrases
+	// for now, split by whitespace
+	TArray<FString> words;
+	int32 wordCount = text.ParseIntoArrayWS(words, _T("\n"), true);
+
+	for (int i = 0; i < wordCount; i++) {
+		this->OnWordSpoken.Broadcast(words[i]);
+	}
+
 }
