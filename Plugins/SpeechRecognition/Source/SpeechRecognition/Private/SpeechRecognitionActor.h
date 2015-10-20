@@ -2,6 +2,7 @@
 #pragma once
 
 #include "SpeechRecognitionWorker.h"
+#include "TaskGraphInterfaces.h"
 #include "SpeechRecognitionActor.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWordsSpokenSignature, FString, Text);
@@ -12,25 +13,26 @@ class SPEECHRECOGNITION_API ASpeechRecognitionActor : public AActor
 	GENERATED_BODY()
 
 private:
+
+	int32 instanceCtr;
 	
 	FSpeechRecognitionWorker* listenerThread;
+
+	static void WordSpoken_trigger(FWordsSpokenSignature delegate_method, FString text);
 
 public:
 
 	// Basic functions 
 	UFUNCTION(BlueprintCallable, Category = "Audio", meta = (FriendlyName = "Init", Keywords = "Speech Recognition Init"))
-	bool Init(ESpeechRecognitionLanguage language);
+	bool Init(ESpeechRecognitionLanguage language, TArray<FString> wordList);
 
 	UFUNCTION(BlueprintCallable, Category = "Audio", meta = (FriendlyName = "Shutdown", Keywords = "Speech Recognition Shutdown"))
-	void Shutdown();
-
-	UFUNCTION(BlueprintCallable, Category = "Audio", meta = (FriendlyName = "Add Words", Keywords = "Speech Recognition"))
-	void AddWords(TArray<FString> wordList);
+	bool Shutdown();
 
 	UFUNCTION()
 	void WordSpoken_method(FString text);
 
-	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Audio")
+	UPROPERTY(BlueprintAssignable, Category = "Audio")
 	FWordsSpokenSignature OnWordSpoken;
-};
 
+};

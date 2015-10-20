@@ -14,7 +14,7 @@
 //using namespace std;
 
 //General Log
-DECLARE_LOG_CATEGORY_EXTERN(YourLog, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(SpeechRecognitionPlugin, Log, All);
 
 UENUM(BlueprintType)
 enum class ESpeechRecognitionLanguage : uint8
@@ -35,6 +35,8 @@ private:
 	int16 adbuf[2048];
 	uint8 utt_started, in_speech;
 	int32 k;
+	bool initSuccess;
+	bool wordsAdded;
 
 	//Thread
 	FRunnableThread* Thread;
@@ -52,6 +54,7 @@ private:
 	std::string contentPath_str;
 
 	//Dictionary phrase map
+	TArray<FString> dictionaryList;
 	std::map<std::string, std::string> dictionaryMap;
 
 public:
@@ -65,9 +68,9 @@ public:
 
 	void AddWords(TArray<FString> dictionaryList);
 	void SetLanguage(ESpeechRecognitionLanguage language);
-	void SetManager(ASpeechRecognitionActor* manager);
+	bool StartThread(ASpeechRecognitionActor* manager);
 
-	void ClientMessage(FString txt);
+	static void ClientMessage(FString txt);
 
 	void ShutDown();
 

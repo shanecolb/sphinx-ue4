@@ -8,6 +8,8 @@
 class ISpeechRecognition : public IModuleInterface
 {
 
+	int32 instanceCtr;
+
 public:
 
 	UFUNCTION(BlueprintCallable, Category = "Audio")
@@ -20,6 +22,12 @@ public:
 	static inline bool IsAvailable()
 	{
 		return FModuleManager::Get().IsModuleLoaded("SpeechRecognition");
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Audio")
+	int32 GetInstanceCounter()
+	{
+		return instanceCtr++;
 	}
 
 };

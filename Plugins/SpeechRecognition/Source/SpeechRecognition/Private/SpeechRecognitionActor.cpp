@@ -3,28 +3,36 @@
 
 #define SPEECHRECOGNITIONPLUGIN ISpeechRecognition::Get()
 
-bool ASpeechRecognitionActor::Init(ESpeechRecognitionLanguage language)
+bool ASpeechRecognitionActor::Init(ESpeechRecognitionLanguage language, TArray<FString> wordList)
 {
-	if (listenerThread == NULL)
-	{
-		// start listener thread
-		listenerThread = new FSpeechRecognitionWorker();
-		TArray<FString> dictionaryList;
-		listenerThread->SetLanguage(language);
-		listenerThread->SetManager(this);
-	}
-	return (listenerThread == NULL);;
-}
+	// terminate any existing thread
+	if (listenerThread != NULL)
+		Shutdown();
 
-void ASpeechRecognitionActor::Shutdown()
-{
-	listenerThread->ShutDown();
-	listenerThread = NULL;
-}
-
-void ASpeechRecognitionActor::AddWords(TArray<FString> wordList)
-{
+	// start listener thread
+	listenerThread = new FSpeechRecognitionWorker();
+	TArray<FString> dictionaryList;
+	listenerThread->SetLanguage(language);
 	listenerThread->AddWords(wordList);
+	bool threadSuccess = listenerThread->StartThread(this);
+	return threadSuccess;
+}
+
+bool ASpeechRecognitionActor::Shutdown()
+{
+	if (listenerThread != NULL) {
+		listenerThread->ShutDown();
+		listenerThread = NULL;
+		return true;
+	}
+	else{
+		return false;
+	}
+}
+
+void ASpeechRecognitionActor::WordSpoken_trigger(FWordsSpokenSignature delegate_method, FString text)
+{
+	delegate_method.Broadcast(text);
 }
 
 void ASpeechRecognitionActor::WordSpoken_method(FString text)
@@ -35,7 +43,13 @@ void ASpeechRecognitionActor::WordSpoken_method(FString text)
 	int32 wordCount = text.ParseIntoArrayWS(words, _T("\n"), true);
 
 	for (int i = 0; i < wordCount; i++) {
-		this->OnWordSpoken.Broadcast(words[i]);
+		FSimpleDelegateGraphTask::CreateAndDispatchWhenReady
+			(
+			FSimpleDelegateGraphTask::FDelegate::CreateStatic(&WordSpoken_trigger, OnWordSpoken, words[i])
+			, TStatId()
+			, nullptr
+			, ENamedThreads::GameThread
+			);
 	}
 
 }

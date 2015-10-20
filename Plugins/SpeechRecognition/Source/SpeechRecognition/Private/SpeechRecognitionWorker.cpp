@@ -2,7 +2,7 @@
 #include "SpeechRecognitionWorker.h"
 
 //General Log
-DEFINE_LOG_CATEGORY(YourLog);
+DEFINE_LOG_CATEGORY(SpeechRecognitionPlugin);
 
 FSpeechRecognitionWorker::FSpeechRecognitionWorker() {}
 
@@ -14,9 +14,10 @@ FSpeechRecognitionWorker::~FSpeechRecognitionWorker() {
 void FSpeechRecognitionWorker::ShutDown() {
 	Stop();
 	Thread->WaitForCompletion();
+	delete Thread;
 }
 
-void FSpeechRecognitionWorker::SetLanguage(ESpeechRecognitionLanguage language){
+void FSpeechRecognitionWorker::SetLanguage(ESpeechRecognitionLanguage language) {
 
 	// set Content Path
 	FString contentPath = FPaths::ConvertRelativePathToFull(FPaths::GameContentDir());
@@ -34,20 +35,8 @@ void FSpeechRecognitionWorker::SetLanguage(ESpeechRecognitionLanguage language){
 
 }
 
-void FSpeechRecognitionWorker::AddWords(TArray<FString> dictionaryList){
-	for (auto It = dictionaryList.CreateConstIterator(); It; ++It)
-	{
-		FString word = *It;
-		std::string wordStr = std::string(TCHAR_TO_UTF8(*word));
-
-		// search for the word in the dictionary
-		// if found, add the word to the sphinx process
-		if (dictionaryMap.find(wordStr) != dictionaryMap.end())
-		{
-			std::string phraseStr = dictionaryMap.at(wordStr);
-			ps_add_word(ps, wordStr.c_str(), phraseStr.c_str(), TRUE);
-		}
-	}
+void FSpeechRecognitionWorker::AddWords(TArray<FString> dictionaryList) {
+	this->dictionaryList = dictionaryList;
 }
 
 bool FSpeechRecognitionWorker::Init() {
@@ -70,9 +59,6 @@ bool FSpeechRecognitionWorker::Init() {
 		std::string phrase = currentLine.substr(currentLine.find(" ") + 1, currentLine.size());
 		dictionaryMap.insert(make_pair(word, phrase));
 	}
-	
-	ClientMessage(FString(modelPath.c_str()));
-	ClientMessage(FString(languageModel.c_str()));
 
 	// Start Sphinx
 	config = cmd_ln_init(NULL, ps_args(), 1,
@@ -82,35 +68,58 @@ bool FSpeechRecognitionWorker::Init() {
 	
 	ps = ps_init(config);
 
-	if (Manager && ps) {
-		ClientMessage(FString(TEXT("Speech Recognition Thread started successfully")));
-		return true;
-	}
-	else{
+	if (!Manager | !ps) {
 		ClientMessage(FString(TEXT("Speech Recognition Thread failed to start")));
+		initSuccess = false;
 		return false;
 	}
+
+	// only include the words/phrases that have been added
+	for (auto It = dictionaryList.CreateConstIterator(); It; ++It)
+	{
+		FString word = *It;
+		std::string wordStr = std::string(TCHAR_TO_UTF8(*word));
+		if (dictionaryMap.find(wordStr) != dictionaryMap.end())
+		{
+			std::string phraseStr = dictionaryMap.at(wordStr);
+			ps_add_word(ps, wordStr.c_str(), phraseStr.c_str(), TRUE);
+		}
+	}
+
+	// attempt to open the default recording device
+	if ((ad = ad_open_dev(cmd_ln_str_r(config, "-adcdev"),
+		(int)cmd_ln_float32_r(config,
+		"-samprate"))) == NULL) {
+			ClientMessage(FString(TEXT("Failed to open audio device")));
+			initSuccess = false;
+			return initSuccess;
+	}
+
+	utt_started = 0;
+	return true;
 }
 
 uint32 FSpeechRecognitionWorker::Run() {
 
-	// begin
+	char const *hyp;
+	// attempt to open the default recording device
 	if ((ad = ad_open_dev(cmd_ln_str_r(config, "-adcdev"),
 		(int)cmd_ln_float32_r(config,
-		"-samprate"))) == NULL)
+		"-samprate"))) == NULL) {
 		ClientMessage(FString(TEXT("Failed to open audio device")));
-	if (ad_start_rec(ad) < 0)
+		return 1;
+	}
+	if (ad_start_rec(ad) < 0) {
 		ClientMessage(FString(TEXT("Failed to start recording")));
-
-	if (ps_start_utt(ps) < 0)
+		return 2;
+	}
+	if (ps_start_utt(ps) < 0) {
 		ClientMessage(FString(TEXT("Failed to start utterance")));
-	utt_started = 0;
-	ClientMessage(FString(TEXT("Ready...")));
-
-	char const *hyp;
+		return 3;
+	}
 
 	while (StopTaskCounter.GetValue() == 0) {
-		if ((k = ad_read(ad, adbuf, 2048)) < 0)
+		if ((k = ad_read(ad, adbuf, 1024)) < 0)
 			ClientMessage(FString(TEXT("Failed to read audio")));
 		ps_process_raw(ps, adbuf, k, 0, 0);
 		in_speech = ps_get_in_speech(ps);
@@ -138,12 +147,15 @@ void FSpeechRecognitionWorker::Stop() {
 	StopTaskCounter.Increment();
 }
 
-void FSpeechRecognitionWorker::SetManager(ASpeechRecognitionActor* manager){
+bool FSpeechRecognitionWorker::StartThread(ASpeechRecognitionActor* manager) {
 	Manager = manager;
-	Thread = FRunnableThread::Create(this, TEXT("FSpeechRecognitionWorker"), 0U, TPri_BelowNormal);
+	int32 threadIdx = ISpeechRecognition::Get().GetInstanceCounter();
+	FString threadName = FString("FSpeechRecognitionWorker:") + FString::FromInt(threadIdx);
+	initSuccess = true;
+	Thread = FRunnableThread::Create(this, *threadName, 0U, TPri_Highest);
+	return initSuccess;
 }
 
-void FSpeechRecognitionWorker::ClientMessage(FString text)
-{
-	UE_LOG(YourLog, Log, TEXT("%s"), *text);
+void FSpeechRecognitionWorker::ClientMessage(FString text) {
+	UE_LOG(SpeechRecognitionPlugin, Log, TEXT("%s"), *text);
 }
