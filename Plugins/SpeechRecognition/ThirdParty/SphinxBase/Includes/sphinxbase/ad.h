@@ -41,7 +41,7 @@
 #ifndef _AD_H_
 #define _AD_H_
 
-#include <sphinx_config.h>
+#include <win32/sphinx_config.h>
 
 #include <sphinxbase/sphinxbase_export.h>
 #include <sphinxbase/prim_type.h>

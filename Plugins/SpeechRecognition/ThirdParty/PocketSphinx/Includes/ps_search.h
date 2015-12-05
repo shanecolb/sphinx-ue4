@@ -266,7 +266,7 @@ int ps_set_kws(ps_decoder_t *ps, const char *name, const char *keyfile);
  * @see ps_set_search
  */
 POCKETSPHINX_EXPORT 
-int ps_set_keyphrase(ps_decoder_t *ps, const char *name, const char *keyphrase);
+int ps_set_keyphrase(ps_decoder_t *ps, const char *name, const char *keyphrase[], int32 *tollerence, int keycount);
 
 /**
  * Adds new search based on phone N-gram language model.

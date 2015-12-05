@@ -3,7 +3,7 @@
 
 #define SPEECHRECOGNITIONPLUGIN ISpeechRecognition::Get()
 
-bool ASpeechRecognitionActor::Init(ESpeechRecognitionLanguage language, TArray<FString> wordList)
+bool ASpeechRecognitionActor::Init(ESpeechRecognitionLanguage language, TArray<FRecognitionKeyWord> wordList)
 {
 	// terminate any existing thread
 	if (listenerThread != NULL)
@@ -11,7 +11,7 @@ bool ASpeechRecognitionActor::Init(ESpeechRecognitionLanguage language, TArray<F
 
 	// start listener thread
 	listenerThread = new FSpeechRecognitionWorker();
-	TArray<FString> dictionaryList;
+	TArray<FRecognitionKeyWord> dictionaryList;
 	listenerThread->SetLanguage(language);
 	listenerThread->AddWords(wordList);
 	bool threadSuccess = listenerThread->StartThread(this);
@@ -37,19 +37,13 @@ void ASpeechRecognitionActor::WordSpoken_trigger(FWordsSpokenSignature delegate_
 
 void ASpeechRecognitionActor::WordSpoken_method(FString text)
 {
-	// TODO: Split by phrases
-	// for now, split by whitespace
-	TArray<FString> words;
-	int32 wordCount = text.ParseIntoArrayWS(words, _T("\n"), true);
+	FSimpleDelegateGraphTask::CreateAndDispatchWhenReady
+		(
+		FSimpleDelegateGraphTask::FDelegate::CreateStatic(&WordSpoken_trigger, OnWordSpoken, text)
+		, TStatId()
+		, nullptr
+		, ENamedThreads::GameThread
+		);
 
-	for (int i = 0; i < wordCount; i++) {
-		FSimpleDelegateGraphTask::CreateAndDispatchWhenReady
-			(
-			FSimpleDelegateGraphTask::FDelegate::CreateStatic(&WordSpoken_trigger, OnWordSpoken, words[i])
-			, TStatId()
-			, nullptr
-			, ENamedThreads::GameThread
-			);
-	}
 
 }
