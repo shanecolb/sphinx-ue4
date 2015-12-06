@@ -3,7 +3,8 @@ A speech recognition plugin for Unreal Engine 4.
 This is essentially a port of the functionality of Pocketsphinx.
 
 <b>Note:</b> 
-This plugin uses a slightly modified version of PocketSphinx, to support passing in a set of keywords, dynamically, rather than a static file of the keywords. The modified code is contained within the _other folder.
+This plugin uses a slightly modified version of PocketSphinx, to support passing in a set of keywords, dynamically.
+The modified code is contained within the _other folder.
 
 # Information
 Please read https://github.com/shanecolb/sphinx-ue4/wiki
