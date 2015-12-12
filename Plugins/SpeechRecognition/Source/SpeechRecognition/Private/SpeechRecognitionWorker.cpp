@@ -1,4 +1,4 @@
-#include "SpeechRecognition.h"
+﻿#include "SpeechRecognition.h"
 #include "SpeechRecognitionWorker.h"
 
 //General Log
@@ -42,10 +42,13 @@ void FSpeechRecognitionWorker::SetLanguage(ESpeechRecognitionLanguage language) 
 	// language model and dictionary paths
 	switch (language) {
 	case ESpeechRecognitionLanguage::VE_English:
-		langStr = "en-us";
+		langStr = "en";
+		break;
+	case ESpeechRecognitionLanguage::VE_Chinese:
+		langStr = "zn";
 		break;
 	default:
-		langStr = "en-us";
+		langStr = "en";
 		break;
 	}
 
@@ -93,7 +96,7 @@ bool FSpeechRecognitionWorker::Init() {
 
 	std::string logPath = contentPath_str + "log/";
 	std::string modelPath = contentPath_str + "model/" + langStr + "/" + langStr;
-	std::string languageModel = contentPath_str + "model/" + langStr + "/" + langStr + ".lm.bin";
+	std::string languageModel = contentPath_str + "model/" + langStr + "/" + langStr + ".lm";
 	std::string dictionaryPath = contentPath_str + "model/" + langStr + "/" + langStr + ".dict";
 
 	std::ifstream file(dictionaryPath);
@@ -158,6 +161,7 @@ uint32 FSpeechRecognitionWorker::Run() {
 	int32* tollerences;
 	tollerences = (int32*)malloc(keywords.size() * sizeof(int32));
 	int i = 0;
+
 	for (it = keywords.begin(); it != keywords.end(); ++it) {
 
 		// check if the word is in the dictionary. If missing, omit the phrase, and log
@@ -185,6 +189,9 @@ uint32 FSpeechRecognitionWorker::Run() {
 		tollerences[i] = tollerenceInt;
 		i++;
 	}
+
+
+
 
 	int phraseCnt = i;
 	const char** const_copy = (const char**)phrases;
@@ -217,7 +224,7 @@ uint32 FSpeechRecognitionWorker::Run() {
 				continue;
 			
 			// log the phrase/phrases that have been spoken, and trigger WordSpoken method
-			FString phrases = FString(ANSI_TO_TCHAR(hyp));
+			FString phrases = FString(UTF8_TO_TCHAR(hyp));
 			ClientMessage(phrases);
 			UE_LOG(SpeechRecognitionPlugin, Log, TEXT("Phrases: %s "), *phrases);
 			Manager->WordSpoken_method(phrases);
