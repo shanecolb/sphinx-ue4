@@ -8,16 +8,21 @@ FSpeechRecognitionWorker::FSpeechRecognitionWorker() {}
 
 vector<string> FSpeechRecognitionWorker::Split(string s){
 	regex r("\\w+");
-	auto words_begin =
-		std::sregex_iterator(s.begin(), s.end(), r);
+	auto words_begin = std::sregex_iterator(s.begin(), s.end(), r);
 	auto words_end = std::sregex_iterator();
 
 	vector<string> result;
 
-	for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
-		std::smatch match = *i;
-		std::string match_str = match.str();
-		result.push_back(match_str);
+	// single word, no split necessary
+	if (words_begin == words_end) {
+		result.push_back(s);
+	}else{
+	// multiple words, split it up
+		for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
+			std::smatch match = *i;
+			std::string match_str = match.str();
+			result.push_back(match_str);
+		}
 	}
 	return result;
 }
@@ -46,6 +51,9 @@ void FSpeechRecognitionWorker::SetLanguage(ESpeechRecognitionLanguage language) 
 		break;
 	case ESpeechRecognitionLanguage::VE_Chinese:
 		langStr = "zn";
+		break;
+	case ESpeechRecognitionLanguage::VE_French:
+		langStr = "fr";
 		break;
 	default:
 		langStr = "en";
@@ -170,13 +178,20 @@ uint32 FSpeechRecognitionWorker::Run() {
 
 		bool skip = false;
 		for (v_It = splitString.begin(); v_It != splitString.end(); ++v_It) {
-			if (dictionary.find(*v_It) == dictionary.end()){
+			if (dictionary.find(*v_It) == dictionary.end()) {
 				skip = true;
 			}
 		}
 
 		if (skip)
+		{
+			std::string Strtxt = "The phrase '" + it->first + "' can not be added, as it contains words that are not in the dictionary.";
+			const char* txt = Strtxt.c_str();
+			// "' contains words that do not exist in the dictionary. Ignoring phrase.";
+			FString msg = FString(UTF8_TO_TCHAR(txt));
+			UE_LOG(SpeechRecognitionPlugin, Log, TEXT("SKIPPED PHRASE: %s "), *msg);
 			continue;
+		}
 
 		// keyword
 		char* str;

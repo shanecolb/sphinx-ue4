@@ -21,7 +21,8 @@ UENUM(BlueprintType)
 enum class ESpeechRecognitionLanguage : uint8
 {
 	VE_English 	UMETA(DisplayName = "English"),
-	VE_Chinese  UMETA(DisplayName = "Chinese")
+	VE_Chinese  UMETA(DisplayName = "Chinese"),
+	VE_French	UMETA(DisplayName = "French")
 };
 
 UENUM(BlueprintType)
