@@ -26,17 +26,22 @@ enum class ESpeechRecognitionLanguage : uint8
 };
 
 UENUM(BlueprintType)
-enum class ERecognitionKeywordTollerence : uint8
+enum class EPhraseRecognitionTolerance : uint8
 {
-	VE_V_LOW 	UMETA(DisplayName = "Very Low"),
-	VE_LOW  	UMETA(DisplayName = "Low"),
-	VE_MEDIUM	UMETA(DisplayName = "Medium"),
-	VE_HIGH	    UMETA(DisplayName = "High"),
-	VE_V_HIGH	UMETA(DisplayName = "Very High")
+	VE_1 	UMETA(DisplayName = "V1"),
+	VE_2 	UMETA(DisplayName = "V2"),
+	VE_3 	UMETA(DisplayName = "V3"),
+	VE_4 	UMETA(DisplayName = "V4"),
+	VE_5 	UMETA(DisplayName = "V5"),
+	VE_6 	UMETA(DisplayName = "V6"),
+	VE_7 	UMETA(DisplayName = "V7"),
+	VE_8 	UMETA(DisplayName = "V8"),
+	VE_9 	UMETA(DisplayName = "V9"),
+	VE_10 	UMETA(DisplayName = "V10")
 };
 
 USTRUCT(BlueprintType)
-struct FRecognitionKeyWord
+struct FRecognitionPhrase
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -44,9 +49,9 @@ struct FRecognitionKeyWord
 	FString keyword;
 
 	UPROPERTY(BlueprintReadWrite)
-	ERecognitionKeywordTollerence tollerence;
+	EPhraseRecognitionTolerance tolerance;
 
-	FRecognitionKeyWord(){
+	FRecognitionPhrase(){
 
 	}
 };
@@ -107,7 +112,7 @@ public:
 	virtual void Stop();
 	virtual uint32 Run();
 
-	void AddWords(TArray<FRecognitionKeyWord> dictionaryList);
+	void AddWords(TArray<FRecognitionPhrase> dictionaryList);
 	void SetLanguage(ESpeechRecognitionLanguage language);
 	bool StartThread(ASpeechRecognitionActor* manager);
 

@@ -3,7 +3,7 @@
 
 #define SPEECHRECOGNITIONPLUGIN ISpeechRecognition::Get()
 
-bool ASpeechRecognitionActor::Init(ESpeechRecognitionLanguage language, TArray<FRecognitionKeyWord> wordList)
+bool ASpeechRecognitionActor::Init(ESpeechRecognitionLanguage language, TArray<FRecognitionPhrase> wordList)
 {
 	// terminate any existing thread
 	if (listenerThread != NULL)
@@ -11,7 +11,7 @@ bool ASpeechRecognitionActor::Init(ESpeechRecognitionLanguage language, TArray<F
 
 	// start listener thread
 	listenerThread = new FSpeechRecognitionWorker();
-	TArray<FRecognitionKeyWord> dictionaryList;
+	TArray<FRecognitionPhrase> dictionaryList;
 	listenerThread->SetLanguage(language);
 	listenerThread->AddWords(wordList);
 	bool threadSuccess = listenerThread->StartThread(this);

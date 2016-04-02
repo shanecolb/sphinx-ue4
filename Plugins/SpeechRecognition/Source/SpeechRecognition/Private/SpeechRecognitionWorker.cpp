@@ -62,40 +62,55 @@ void FSpeechRecognitionWorker::SetLanguage(ESpeechRecognitionLanguage language) 
 
 }
 
-void FSpeechRecognitionWorker::AddWords(TArray<FRecognitionKeyWord> keywords) {
+void FSpeechRecognitionWorker::AddWords(TArray<FRecognitionPhrase> keywords) {
 	for (auto It = keywords.CreateConstIterator(); It; ++It)
 	{
-		FRecognitionKeyWord word = *It;
+		FRecognitionPhrase word = *It;
 		std::string wordStr = std::string(TCHAR_TO_UTF8(*word.keyword));
 		transform(wordStr.begin(), wordStr.end(), wordStr.begin(), ::tolower);
 
-		ERecognitionKeywordTollerence tollerencEnum = word.tollerence;
-		char* tollerence;
-		switch (tollerencEnum) {
-		case ERecognitionKeywordTollerence::VE_V_LOW:
-			tollerence = "1e-40/";
+		EPhraseRecognitionTolerance toleranceEnum = word.tolerance;
+		char* tolerance;
+		switch (toleranceEnum) {
+		case EPhraseRecognitionTolerance::VE_1:
+			tolerance = (char*)"1e-60/";
 			break;
-		case ERecognitionKeywordTollerence::VE_LOW:
-			tollerence = "1e-30/";
+		case EPhraseRecognitionTolerance::VE_2:
+			tolerance = (char*)"1e-55/";
 			break;
-		case ERecognitionKeywordTollerence::VE_MEDIUM:
-			tollerence = "1e-20/";
+		case EPhraseRecognitionTolerance::VE_3:
+			tolerance = (char*)"1e-50/";
 			break;
-		case ERecognitionKeywordTollerence::VE_HIGH:
-			tollerence = "1e-10/";
+		case EPhraseRecognitionTolerance::VE_4:
+			tolerance = (char*)"1e-40/";
 			break;
-		case ERecognitionKeywordTollerence::VE_V_HIGH:
-			tollerence = "1e-5/";
+		case EPhraseRecognitionTolerance::VE_5:
+			tolerance = (char*)"1e-30/";
+			break;
+		case EPhraseRecognitionTolerance::VE_6:
+			tolerance = (char*)"1e-20/";
+			break;
+		case EPhraseRecognitionTolerance::VE_7:
+			tolerance = (char*)"1e-10/";
+			break;
+		case EPhraseRecognitionTolerance::VE_8:
+			tolerance = (char*)"1e-5/";
+			break;
+		case EPhraseRecognitionTolerance::VE_9:
+			tolerance = (char*)"1e-4/";
+			break;
+		case EPhraseRecognitionTolerance::VE_10:
+			tolerance = (char*)"1e-3/";
 			break;
 		default:
-			tollerence = "1e-2/";
+			tolerance = (char*)"1e-2/";
 		}
 		
 		pair<map<string, char*>::iterator, bool> ret;
-		ret = this->keywords.insert(pair<string, char*>(wordStr, tollerence));
+		ret = this->keywords.insert(pair<string, char*>(wordStr, tolerance));
 		if (ret.second == false) {
 			this->keywords.erase(wordStr);
-			this->keywords.insert(pair<string, char*>(wordStr, tollerence));
+			this->keywords.insert(pair<string, char*>(wordStr, tolerance));
 		}
 	}
 }

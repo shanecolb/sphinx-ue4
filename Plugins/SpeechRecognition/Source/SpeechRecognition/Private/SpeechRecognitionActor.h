@@ -24,7 +24,7 @@ public:
 
 	// Basic functions 
 	UFUNCTION(BlueprintCallable, Category = "Audio", meta = (DisplayName = "Init", Keywords = "Speech Recognition Init"))
-	bool Init(ESpeechRecognitionLanguage language, TArray<FRecognitionKeyWord> wordList);
+	bool Init(ESpeechRecognitionLanguage language, TArray<FRecognitionPhrase> wordList);
 
 	UFUNCTION(BlueprintCallable, Category = "Audio", meta = (DisplayName = "Shutdown", Keywords = "Speech Recognition Shutdown"))
 	bool Shutdown();
