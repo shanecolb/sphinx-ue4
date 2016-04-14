@@ -3,7 +3,7 @@
 #include "Engine.h"
 #include "SpeechRecognitionActor.h"
 #include "SpeechRecognitionWorker.h"
-#include <ISpeechRecognition.h>
+#include "ISpeechRecognition.h"
 
 class FSpeechRecognition :public ISpeechRecognition
 {

@@ -66,7 +66,7 @@ void FSpeechRecognitionWorker::AddWords(TArray<FRecognitionPhrase> keywords) {
 	for (auto It = keywords.CreateConstIterator(); It; ++It)
 	{
 		FRecognitionPhrase word = *It;
-		std::string wordStr = std::string(TCHAR_TO_UTF8(*word.keyword));
+		std::string wordStr = std::string(TCHAR_TO_UTF8(*word.phrase));
 		transform(wordStr.begin(), wordStr.end(), wordStr.begin(), ::tolower);
 
 		EPhraseRecognitionTolerance toleranceEnum = word.tolerance;

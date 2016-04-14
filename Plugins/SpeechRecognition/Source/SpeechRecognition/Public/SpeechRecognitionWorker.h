@@ -46,13 +46,25 @@ struct FRecognitionPhrase
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY(BlueprintReadWrite)
-	FString keyword;
+	FString phrase;
 
 	UPROPERTY(BlueprintReadWrite)
 	EPhraseRecognitionTolerance tolerance;
 
-	FRecognitionPhrase(){
+	// default constructor
+	FRecognitionPhrase() {
+	}
 
+	// if you wish to only provide a phrase
+	FRecognitionPhrase(FString keyword){
+		this->phrase = phrase;
+		tolerance = EPhraseRecognitionTolerance::VE_5;
+	}
+
+	// if you wish to specify both a phrase, and a tolerance setting
+	FRecognitionPhrase(FString phrase, EPhraseRecognitionTolerance tolerance) {
+		this->phrase = phrase;
+		this->tolerance = tolerance;
 	}
 };
 
