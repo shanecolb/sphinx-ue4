@@ -14,4 +14,7 @@ public:
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 
+	/** Search for a dll to be loaded dynamically */
+	bool SearchForDllPath(FString _searchBase, FString _dllName);
+
 };

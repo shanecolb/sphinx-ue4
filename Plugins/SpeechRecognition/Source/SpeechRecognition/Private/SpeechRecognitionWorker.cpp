@@ -6,7 +6,7 @@ DEFINE_LOG_CATEGORY(SpeechRecognitionPlugin);
 
 FSpeechRecognitionWorker::FSpeechRecognitionWorker() {}
 
-vector<string> FSpeechRecognitionWorker::Split(string s){
+vector<string> FSpeechRecognitionWorker::Split(string s) {
 	regex r("\\w+");
 	auto words_begin = std::sregex_iterator(s.begin(), s.end(), r);
 	auto words_end = std::sregex_iterator();
@@ -16,8 +16,9 @@ vector<string> FSpeechRecognitionWorker::Split(string s){
 	// single word, no split necessary
 	if (words_begin == words_end) {
 		result.push_back(s);
-	}else{
-	// multiple words, split it up
+	}
+	else {
+		// multiple words, split it up
 		for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
 			std::smatch match = *i;
 			std::string match_str = match.str();
@@ -105,7 +106,7 @@ void FSpeechRecognitionWorker::AddWords(TArray<FRecognitionPhrase> keywords) {
 		default:
 			tolerance = (char*)"1e-2/";
 		}
-		
+
 		pair<map<string, char*>::iterator, bool> ret;
 		ret = this->keywords.insert(pair<string, char*>(wordStr, tolerance));
 		if (ret.second == false) {
@@ -153,10 +154,10 @@ bool FSpeechRecognitionWorker::Init() {
 	// attempt to open the default recording device
 	if ((ad = ad_open_dev(cmd_ln_str_r(config, "-adcdev"),
 		(int)cmd_ln_float32_r(config,
-		"-samprate"))) == NULL) {
-			ClientMessage(FString(TEXT("Failed to open audio device")));
-			initSuccess = false;
-			return initSuccess;
+			"-samprate"))) == NULL) {
+		ClientMessage(FString(TEXT("Failed to open audio device")));
+		initSuccess = false;
+		return initSuccess;
 	}
 
 	utt_started = 0;
@@ -169,7 +170,7 @@ uint32 FSpeechRecognitionWorker::Run() {
 	// attempt to open the default recording device
 	if ((ad = ad_open_dev(cmd_ln_str_r(config, "-adcdev"),
 		(int)cmd_ln_float32_r(config,
-		"-samprate"))) == NULL) {
+			"-samprate"))) == NULL) {
 		ClientMessage(FString(TEXT("Failed to open audio device")));
 		return 1;
 	}
@@ -227,7 +228,7 @@ uint32 FSpeechRecognitionWorker::Run() {
 	const char** const_copy = (const char**)phrases;
 	ps_set_keyphrase(ps, "keyphrase_search", const_copy, tollerences, phraseCnt);
 	ps_set_search(ps, "keyphrase_search");
-	
+
 	if (ps_start_utt(ps) < 0) {
 		ClientMessage(FString(TEXT("Failed to start utterance")));
 		return 3;
@@ -252,7 +253,7 @@ uint32 FSpeechRecognitionWorker::Run() {
 			// re-loop, if there is no hypothesis
 			if (hyp == NULL)
 				continue;
-			
+
 			// log the phrase/phrases that have been spoken, and trigger WordSpoken method
 			FString phrases = FString(UTF8_TO_TCHAR(hyp));
 			ClientMessage(phrases);

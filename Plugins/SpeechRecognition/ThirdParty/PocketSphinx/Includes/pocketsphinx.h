@@ -38,12 +38,6 @@
 #ifndef __POCKETSPHINX_H__
 #define __POCKETSPHINX_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-#if 0
-}
-#endif
 
 /* System headers we need. */
 #include <stdio.h>
@@ -59,6 +53,13 @@ extern "C" {
 #include <cmdln_macro.h>
 #include <ps_lattice.h>
 #include <ps_mllr.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+#if 0
+}
+#endif
 
 /**
  * PocketSphinx speech recognizer object.
@@ -88,8 +89,8 @@ ps_default_search_args(cmd_ln_t *);
  * Initialize the decoder from a configuration object.
  *
  * @note The decoder retains ownership of the pointer
- * <code>config</code>, so you must not attempt to free it manually.
- * If you wish to reuse it elsewhere, call cmd_ln_retain() on it.
+ * <code>config</code>, so if you are not going to use it
+ * elsewere, you can free it.
  *
  * @param config a command-line structure, as created by
  * cmd_ln_parse_r() or cmd_ln_parse_file_r().
@@ -408,17 +409,6 @@ POCKETSPHINX_EXPORT
 char const *ps_get_hyp(ps_decoder_t *ps, int32 *out_best_score);
 
 /**
- * Get hypothesis string and final flag.
- *
- * @param ps Decoder.
- * @param out_is_best_score Output: if hypothesis is reached final state in the grammar.
- * @return String containing best hypothesis at this point in
- *         decoding.  NULL if no hypothesis is available.
- */
-POCKETSPHINX_EXPORT
-char const *ps_get_hyp_final(ps_decoder_t *ps, int32 *out_is_final);
-
-/**
  * Get posterior probability.
  *
  * @note Unless the -bestpath option is enabled, this function will
@@ -454,12 +444,11 @@ ps_lattice_t *ps_get_lattice(ps_decoder_t *ps);
  * Get an iterator over the word segmentation for the best hypothesis.
  *
  * @param ps Decoder.
- * @param out_best_score Output: path score corresponding to hypothesis.
  * @return Iterator over the best hypothesis at this point in
  *         decoding.  NULL if no hypothesis is available.
  */
 POCKETSPHINX_EXPORT
-ps_seg_t *ps_seg_iter(ps_decoder_t *ps, int32 *out_best_score);
+ps_seg_t *ps_seg_iter(ps_decoder_t *ps);
 
 /**
  * Get the next segment in a word segmentation.
@@ -527,22 +516,15 @@ POCKETSPHINX_EXPORT
 void ps_seg_free(ps_seg_t *seg);
 
 /**
- * Get an iterator over the best hypotheses, optionally within a
- * selected region of the utterance. Iterator is empty now, it must
- * be advanced with ps_nbest_next first. The function may also
+ * Get an iterator over the best hypotheses. The function may also
  * return a NULL which means that there is no hypothesis available for this
  * utterance.
  *
  * @param ps Decoder.
- * @param sf Start frame for N-best search (0 for whole utterance) 
- * @param ef End frame for N-best search (-1 for whole utterance) 
- * @param ctx1 First word of trigram context (NULL for whole utterance)
- * @param ctx2 First word of trigram context (NULL for whole utterance)
  * @return Iterator over N-best hypotheses or NULL if no hypothesis is available
  */
 POCKETSPHINX_EXPORT
-ps_nbest_t *ps_nbest(ps_decoder_t *ps, int sf, int ef,
-                     char const *ctx1, char const *ctx2);
+ps_nbest_t *ps_nbest(ps_decoder_t *ps);
 
 /**
  * Move an N-best list iterator forward.
@@ -572,7 +554,7 @@ char const *ps_nbest_hyp(ps_nbest_t *nbest, int32 *out_score);
  * @return Iterator over the next best hypothesis.
  */
 POCKETSPHINX_EXPORT
-ps_seg_t *ps_nbest_seg(ps_nbest_t *nbest, int32 *out_score);
+ps_seg_t *ps_nbest_seg(ps_nbest_t *nbest);
 
 /**
  * Finish N-best search early, releasing resources.
@@ -641,8 +623,9 @@ void ps_get_rawdata(ps_decoder_t *ps, int16 **buffer, int32 *size);
 /**
  * @mainpage PocketSphinx API Documentation
  * @author David Huggins-Daines <dhuggins@cs.cmu.edu>
- * @version 0.6
- * @date March, 2010
+ * @author Alpha Cephei Inc.
+ * @version 5prealpha
+ * @date July, 2015
  *
  * @section intro_sec Introduction
  *
