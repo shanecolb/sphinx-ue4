@@ -233,16 +233,29 @@ uint32 FSpeechRecognitionWorker::Run() {
 		ClientMessage(FString(TEXT("Failed to start utterance")));
 		return 3;
 	}
+	
+	uint8 prev_in_speech = 0;
 
 	while (StopTaskCounter.GetValue() == 0) {
 		if ((k = ad_read(ad, adbuf, 1024)) < 0)
 			ClientMessage(FString(TEXT("Failed to read audio")));
+
 		ps_process_raw(ps, adbuf, k, 0, 0);
+		prev_in_speech = in_speech;
 		in_speech = ps_get_in_speech(ps);
+
+		if (in_speech != prev_in_speech) {
+			if (in_speech) {
+				Manager->StartedSpeaking_method();
+			}
+			else {
+				Manager->StoppedSpeaking_method();
+			}
+		}
+
 		if (in_speech && !utt_started) {
 			utt_started = 1;
 		}
-
 		if (!in_speech && utt_started) {
 
 			// obtain a count of the number of frames, and the hypothesis phrase spoken

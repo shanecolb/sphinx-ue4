@@ -5,6 +5,9 @@
 #include "TaskGraphInterfaces.h"
 #include "SpeechRecognitionActor.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FStartedSpeakingSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FStoppedSpeakingSignature);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWordsSpokenSignature, FString, Text);
 
 UCLASS(BlueprintType, Blueprintable)
@@ -19,6 +22,8 @@ private:
 	FSpeechRecognitionWorker* listenerThread;
 
 	static void WordSpoken_trigger(FWordsSpokenSignature delegate_method, FString text);
+	static void StartedSpeaking_trigger(FStartedSpeakingSignature delegate_method);
+	static void StoppedSpeaking_trigger(FStoppedSpeakingSignature delegate_method);
 
 public:
 
@@ -35,4 +40,15 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Audio")
 	FWordsSpokenSignature OnWordSpoken;
 
+	UFUNCTION()
+	void StartedSpeaking_method();
+
+	UPROPERTY(BlueprintAssignable, Category = "Audio")
+	FStartedSpeakingSignature OnStartedSpeaking;
+
+	UFUNCTION()
+	void StoppedSpeaking_method();
+
+	UPROPERTY(BlueprintAssignable, Category = "Audio")
+	FStoppedSpeakingSignature OnStoppedSpeaking;
 };

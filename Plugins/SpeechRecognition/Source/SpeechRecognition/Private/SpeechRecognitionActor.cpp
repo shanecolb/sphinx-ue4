@@ -47,3 +47,39 @@ void ASpeechRecognitionActor::WordSpoken_method(FString text)
 
 
 }
+
+void ASpeechRecognitionActor::StartedSpeaking_trigger(FStartedSpeakingSignature delegate_method)
+{
+	delegate_method.Broadcast();
+}
+
+void ASpeechRecognitionActor::StartedSpeaking_method()
+{
+	FSimpleDelegateGraphTask::CreateAndDispatchWhenReady
+		(
+		FSimpleDelegateGraphTask::FDelegate::CreateStatic(&StartedSpeaking_trigger, OnStartedSpeaking)
+		, TStatId()
+		, nullptr
+		, ENamedThreads::GameThread
+		);
+
+
+}
+
+void ASpeechRecognitionActor::StoppedSpeaking_trigger(FStoppedSpeakingSignature delegate_method)
+{
+	delegate_method.Broadcast();
+}
+
+void ASpeechRecognitionActor::StoppedSpeaking_method()
+{
+	FSimpleDelegateGraphTask::CreateAndDispatchWhenReady
+		(
+		FSimpleDelegateGraphTask::FDelegate::CreateStatic(&StoppedSpeaking_trigger, OnStoppedSpeaking)
+		, TStatId()
+		, nullptr
+		, ENamedThreads::GameThread
+		);
+
+
+}
