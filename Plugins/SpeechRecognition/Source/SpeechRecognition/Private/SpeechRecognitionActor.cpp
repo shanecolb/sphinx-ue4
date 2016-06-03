@@ -3,8 +3,10 @@
 
 #define SPEECHRECOGNITIONPLUGIN ISpeechRecognition::Get()
 
-bool ASpeechRecognitionActor::Init(ESpeechRecognitionLanguage language, TArray<FRecognitionPhrase> wordList)
+bool ASpeechRecognitionActor::Init(ESpeechRecognitionLanguage language, bool live_recognition, float delay_time)
 {
+	this->live_recognition = live_recognition;
+	this->delay_time = delay_time;
 	// terminate any existing thread
 	if (listenerThread != NULL)
 		Shutdown();
@@ -13,7 +15,6 @@ bool ASpeechRecognitionActor::Init(ESpeechRecognitionLanguage language, TArray<F
 	listenerThread = new FSpeechRecognitionWorker();
 	TArray<FRecognitionPhrase> dictionaryList;
 	listenerThread->SetLanguage(language);
-	listenerThread->AddWords(wordList);
 	bool threadSuccess = listenerThread->StartThread(this);
 	return threadSuccess;
 }
@@ -30,22 +31,65 @@ bool ASpeechRecognitionActor::Shutdown()
 	}
 }
 
-void ASpeechRecognitionActor::WordSpoken_trigger(FWordsSpokenSignature delegate_method, FString text)
+
+void ASpeechRecognitionActor::SetLiveRecognition(bool live_recognition)
+{
+	this->live_recognition = live_recognition;
+	return;
+}
+
+bool ASpeechRecognitionActor::GetLiveRecognition() {
+	return live_recognition;
+}
+
+float ASpeechRecognitionActor::GetDelayTime() {
+	return delay_time;
+}
+
+/**************************
+// Change recognition methods
+**************************/
+bool ASpeechRecognitionActor::EnableKeywordMode(TArray<FRecognitionPhrase> wordList)
+{
+	if (listenerThread != NULL) {
+		return listenerThread->EnableKeywordMode(wordList);
+	}
+	return false;
+}
+
+bool ASpeechRecognitionActor::EnableGrammarMode(FString grammarName)
+{
+	if (listenerThread != NULL) {
+		return listenerThread->EnableGrammarMode(grammarName);
+	}
+	return false;
+}
+
+bool ASpeechRecognitionActor::EnablePhoneticMode()
+{
+	if (listenerThread != NULL) {
+		return listenerThread->EnablePhoneticMode();
+	}
+	return false;
+}
+
+/**************************
+// Callback methods
+**************************/
+void ASpeechRecognitionActor::WordsSpoken_trigger(FWordsSpokenSignature delegate_method, FRecognisedPhrases text)
 {
 	delegate_method.Broadcast(text);
 }
 
-void ASpeechRecognitionActor::WordSpoken_method(FString text)
+void ASpeechRecognitionActor::WordsSpoken_method(FRecognisedPhrases text)
 {
 	FSimpleDelegateGraphTask::CreateAndDispatchWhenReady
 		(
-		FSimpleDelegateGraphTask::FDelegate::CreateStatic(&WordSpoken_trigger, OnWordSpoken, text)
+		FSimpleDelegateGraphTask::FDelegate::CreateStatic(&WordsSpoken_trigger, OnWordsSpoken, text)
 		, TStatId()
 		, nullptr
 		, ENamedThreads::GameThread
 		);
-
-
 }
 
 void ASpeechRecognitionActor::StartedSpeaking_trigger(FStartedSpeakingSignature delegate_method)
@@ -57,13 +101,11 @@ void ASpeechRecognitionActor::StartedSpeaking_method()
 {
 	FSimpleDelegateGraphTask::CreateAndDispatchWhenReady
 		(
-		FSimpleDelegateGraphTask::FDelegate::CreateStatic(&StartedSpeaking_trigger, OnStartedSpeaking)
-		, TStatId()
-		, nullptr
-		, ENamedThreads::GameThread
-		);
-
-
+			FSimpleDelegateGraphTask::FDelegate::CreateStatic(&StartedSpeaking_trigger, OnStartedSpeaking)
+			, TStatId()
+			, nullptr
+			, ENamedThreads::GameThread
+			);
 }
 
 void ASpeechRecognitionActor::StoppedSpeaking_trigger(FStoppedSpeakingSignature delegate_method)
@@ -75,11 +117,9 @@ void ASpeechRecognitionActor::StoppedSpeaking_method()
 {
 	FSimpleDelegateGraphTask::CreateAndDispatchWhenReady
 		(
-		FSimpleDelegateGraphTask::FDelegate::CreateStatic(&StoppedSpeaking_trigger, OnStoppedSpeaking)
-		, TStatId()
-		, nullptr
-		, ENamedThreads::GameThread
-		);
-
-
+			FSimpleDelegateGraphTask::FDelegate::CreateStatic(&StoppedSpeaking_trigger, OnStoppedSpeaking)
+			, TStatId()
+			, nullptr
+			, ENamedThreads::GameThread
+			);
 }

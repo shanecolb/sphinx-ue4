@@ -12,61 +12,10 @@
 #include <fstream>
 #include <iostream>
 #include <cstdio>
+#include <ctime>
 #include <vector>
 #include <utility>
-#include "SpeechRecognitionWorker.generated.h"
 
-
-UENUM(BlueprintType)
-enum class ESpeechRecognitionLanguage : uint8
-{
-	VE_English 	UMETA(DisplayName = "English"),
-	VE_Chinese  UMETA(DisplayName = "Chinese"),
-	VE_French	UMETA(DisplayName = "French")
-};
-
-UENUM(BlueprintType)
-enum class EPhraseRecognitionTolerance : uint8
-{
-	VE_1 	UMETA(DisplayName = "V1"),
-	VE_2 	UMETA(DisplayName = "V2"),
-	VE_3 	UMETA(DisplayName = "V3"),
-	VE_4 	UMETA(DisplayName = "V4"),
-	VE_5 	UMETA(DisplayName = "V5"),
-	VE_6 	UMETA(DisplayName = "V6"),
-	VE_7 	UMETA(DisplayName = "V7"),
-	VE_8 	UMETA(DisplayName = "V8"),
-	VE_9 	UMETA(DisplayName = "V9"),
-	VE_10 	UMETA(DisplayName = "V10")
-};
-
-USTRUCT(BlueprintType)
-struct FRecognitionPhrase
-{
-	GENERATED_USTRUCT_BODY()
-
-	UPROPERTY(BlueprintReadWrite)
-	FString phrase;
-
-	UPROPERTY(BlueprintReadWrite)
-	EPhraseRecognitionTolerance tolerance;
-
-	// default constructor
-	FRecognitionPhrase() {
-	}
-
-	// if you wish to only provide a phrase
-	FRecognitionPhrase(FString keyword){
-		this->phrase = phrase;
-		tolerance = EPhraseRecognitionTolerance::VE_5;
-	}
-
-	// if you wish to specify both a phrase, and a tolerance setting
-	FRecognitionPhrase(FString phrase, EPhraseRecognitionTolerance tolerance) {
-		this->phrase = phrase;
-		this->tolerance = tolerance;
-	}
-};
 
 //General Log
 DECLARE_LOG_CATEGORY_EXTERN(SpeechRecognitionPlugin, Log, All);
@@ -82,14 +31,17 @@ class FSpeechRecognitionWorker :public FRunnable
 
 private:
 	// Sphinx
-	ps_decoder_t *ps;
-	cmd_ln_t *config;
+	ps_decoder_t *ps = NULL;
+	cmd_ln_t *config = NULL;
 	ad_rec_t *ad;
 	int16 adbuf[2048];
 	uint8 utt_started, in_speech;
 	int32 k;
-	bool initSuccess;
-	bool wordsAdded;
+	bool initRequired = false;
+	bool wordsAdded = false;
+
+	//Speech detection mode
+	ESpeechRecognitionMode detectionMode;
 
 	//Thread
 	FRunnableThread* Thread;
@@ -103,8 +55,13 @@ private:
 	//Language
 	char* langStr = NULL;
 
-	//Path to the content folder
+	//Paths
 	std::string contentPath_str;
+	std::string logPath;
+	std::string modelPath;
+	std::string languageModel;
+	std::string dictionaryPath;
+
 
 	//Stores the recognition keywords, along with their tollerences
 	std::map <string , char*> keywords;
@@ -115,22 +72,33 @@ private:
 	//Splits a string by whitespace
 	std::vector<std::string> FSpeechRecognitionWorker::Split(std::string s);
 
+	//Create default Pocketsphinx constructor
+	void InitConfig();
+
+	//Add phrases to keyword match list (only required for Keyword matching)
+	void AddWords(TArray<FRecognitionPhrase> dictionaryList);
+
+	void ProcessIncomingSound();
+
 public:
 	FSpeechRecognitionWorker();
 	virtual ~FSpeechRecognitionWorker();
 
 	//FRunnable interface
-	virtual bool Init();
 	virtual void Stop();
 	virtual uint32 Run();
 
-	void AddWords(TArray<FRecognitionPhrase> dictionaryList);
+	//Methods to switch recognition modes
+	bool EnableKeywordMode(TArray<FRecognitionPhrase> wordList);
+	bool EnableGrammarMode(FString grammarName);
+	bool EnablePhoneticMode();
+
 	void SetLanguage(ESpeechRecognitionLanguage language);
 	bool StartThread(ASpeechRecognitionActor* manager);
-
-	static void ClientMessage(FString txt);
-
 	void ShutDown();
+
+	//Print debug text
+	static void ClientMessage(FString txt);
 
 };
 
