@@ -6,7 +6,7 @@ DEFINE_LOG_CATEGORY(SpeechRecognitionPlugin);
 
 FSpeechRecognitionWorker::FSpeechRecognitionWorker() {}
 
-vector<string> FSpeechRecognitionWorker::Split(string s){
+vector<string> FSpeechRecognitionWorker::Split(string s) {
 	regex r("\\w+");
 	auto words_begin = std::sregex_iterator(s.begin(), s.end(), r);
 	auto words_end = std::sregex_iterator();
@@ -16,8 +16,9 @@ vector<string> FSpeechRecognitionWorker::Split(string s){
 	// single word, no split necessary
 	if (words_begin == words_end) {
 		result.push_back(s);
-	}else{
-	// multiple words, split it up
+	}
+	else {
+		// multiple words, split it up
 		for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
 			std::smatch match = *i;
 			std::string match_str = match.str();
@@ -62,40 +63,55 @@ void FSpeechRecognitionWorker::SetLanguage(ESpeechRecognitionLanguage language) 
 
 }
 
-void FSpeechRecognitionWorker::AddWords(TArray<FRecognitionKeyWord> keywords) {
+void FSpeechRecognitionWorker::AddWords(TArray<FRecognitionPhrase> keywords) {
 	for (auto It = keywords.CreateConstIterator(); It; ++It)
 	{
-		FRecognitionKeyWord word = *It;
-		std::string wordStr = std::string(TCHAR_TO_UTF8(*word.keyword));
+		FRecognitionPhrase word = *It;
+		std::string wordStr = std::string(TCHAR_TO_UTF8(*word.phrase));
 		transform(wordStr.begin(), wordStr.end(), wordStr.begin(), ::tolower);
 
-		ERecognitionKeywordTollerence tollerencEnum = word.tollerence;
-		char* tollerence;
-		switch (tollerencEnum) {
-		case ERecognitionKeywordTollerence::VE_V_LOW:
-			tollerence = "1e-40/";
+		EPhraseRecognitionTolerance toleranceEnum = word.tolerance;
+		char* tolerance;
+		switch (toleranceEnum) {
+		case EPhraseRecognitionTolerance::VE_1:
+			tolerance = (char*)"1e-60/";
 			break;
-		case ERecognitionKeywordTollerence::VE_LOW:
-			tollerence = "1e-30/";
+		case EPhraseRecognitionTolerance::VE_2:
+			tolerance = (char*)"1e-55/";
 			break;
-		case ERecognitionKeywordTollerence::VE_MEDIUM:
-			tollerence = "1e-20/";
+		case EPhraseRecognitionTolerance::VE_3:
+			tolerance = (char*)"1e-50/";
 			break;
-		case ERecognitionKeywordTollerence::VE_HIGH:
-			tollerence = "1e-10/";
+		case EPhraseRecognitionTolerance::VE_4:
+			tolerance = (char*)"1e-40/";
 			break;
-		case ERecognitionKeywordTollerence::VE_V_HIGH:
-			tollerence = "1e-5/";
+		case EPhraseRecognitionTolerance::VE_5:
+			tolerance = (char*)"1e-30/";
+			break;
+		case EPhraseRecognitionTolerance::VE_6:
+			tolerance = (char*)"1e-20/";
+			break;
+		case EPhraseRecognitionTolerance::VE_7:
+			tolerance = (char*)"1e-10/";
+			break;
+		case EPhraseRecognitionTolerance::VE_8:
+			tolerance = (char*)"1e-5/";
+			break;
+		case EPhraseRecognitionTolerance::VE_9:
+			tolerance = (char*)"1e-4/";
+			break;
+		case EPhraseRecognitionTolerance::VE_10:
+			tolerance = (char*)"1e-3/";
 			break;
 		default:
-			tollerence = "1e-2/";
+			tolerance = (char*)"1e-2/";
 		}
-		
+
 		pair<map<string, char*>::iterator, bool> ret;
-		ret = this->keywords.insert(pair<string, char*>(wordStr, tollerence));
+		ret = this->keywords.insert(pair<string, char*>(wordStr, tolerance));
 		if (ret.second == false) {
 			this->keywords.erase(wordStr);
-			this->keywords.insert(pair<string, char*>(wordStr, tollerence));
+			this->keywords.insert(pair<string, char*>(wordStr, tolerance));
 		}
 	}
 }
@@ -138,10 +154,10 @@ bool FSpeechRecognitionWorker::Init() {
 	// attempt to open the default recording device
 	if ((ad = ad_open_dev(cmd_ln_str_r(config, "-adcdev"),
 		(int)cmd_ln_float32_r(config,
-		"-samprate"))) == NULL) {
-			ClientMessage(FString(TEXT("Failed to open audio device")));
-			initSuccess = false;
-			return initSuccess;
+			"-samprate"))) == NULL) {
+		ClientMessage(FString(TEXT("Failed to open audio device")));
+		initSuccess = false;
+		return initSuccess;
 	}
 
 	utt_started = 0;
@@ -154,7 +170,7 @@ uint32 FSpeechRecognitionWorker::Run() {
 	// attempt to open the default recording device
 	if ((ad = ad_open_dev(cmd_ln_str_r(config, "-adcdev"),
 		(int)cmd_ln_float32_r(config,
-		"-samprate"))) == NULL) {
+			"-samprate"))) == NULL) {
 		ClientMessage(FString(TEXT("Failed to open audio device")));
 		return 1;
 	}
@@ -212,21 +228,34 @@ uint32 FSpeechRecognitionWorker::Run() {
 	const char** const_copy = (const char**)phrases;
 	ps_set_keyphrase(ps, "keyphrase_search", const_copy, tollerences, phraseCnt);
 	ps_set_search(ps, "keyphrase_search");
-	
+
 	if (ps_start_utt(ps) < 0) {
 		ClientMessage(FString(TEXT("Failed to start utterance")));
 		return 3;
 	}
+	
+	uint8 prev_in_speech = 0;
 
 	while (StopTaskCounter.GetValue() == 0) {
 		if ((k = ad_read(ad, adbuf, 1024)) < 0)
 			ClientMessage(FString(TEXT("Failed to read audio")));
+
 		ps_process_raw(ps, adbuf, k, 0, 0);
+		prev_in_speech = in_speech;
 		in_speech = ps_get_in_speech(ps);
+
+		if (in_speech != prev_in_speech) {
+			if (in_speech) {
+				Manager->StartedSpeaking_method();
+			}
+			else {
+				Manager->StoppedSpeaking_method();
+			}
+		}
+
 		if (in_speech && !utt_started) {
 			utt_started = 1;
 		}
-
 		if (!in_speech && utt_started) {
 
 			// obtain a count of the number of frames, and the hypothesis phrase spoken
@@ -237,7 +266,7 @@ uint32 FSpeechRecognitionWorker::Run() {
 			// re-loop, if there is no hypothesis
 			if (hyp == NULL)
 				continue;
-			
+
 			// log the phrase/phrases that have been spoken, and trigger WordSpoken method
 			FString phrases = FString(UTF8_TO_TCHAR(hyp));
 			ClientMessage(phrases);

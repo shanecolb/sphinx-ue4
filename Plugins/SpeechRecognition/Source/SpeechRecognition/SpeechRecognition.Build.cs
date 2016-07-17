@@ -8,7 +8,7 @@ namespace UnrealBuildTool.Rules
 
         private string ModulePath
         {
-            get { return Path.GetDirectoryName(RulesCompiler.GetModuleFilename(this.GetType().Name)); }
+            get { return ModuleDirectory; }
         }
 
         private string ThirdPartyPath
@@ -62,7 +62,7 @@ namespace UnrealBuildTool.Rules
             LoadPocketSphinx(Target);
 		}
 
-
+        
         public bool LoadSphinxBase(TargetInfo Target)
         {
             bool isLibrarySupported = false;
@@ -73,8 +73,13 @@ namespace UnrealBuildTool.Rules
 
                 string PlatformString = (Target.Platform == UnrealTargetPlatform.Win64) ? "x64" : "x86";
                 string LibrariesPath = Path.Combine(ThirdPartyPath, "SphinxBase", "Libraries");
+                LibrariesPath = Path.Combine(LibrariesPath, PlatformString);
 
-                PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "SphinxBase" + PlatformString + ".lib"));
+                PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "SphinxBase.lib"));
+
+                // TODO: Copy dlls to alternative package directory, to be loaded through a manual process
+                PublicDelayLoadDLLs.Add("SphinxBase.dll");
+                RuntimeDependencies.Add(new RuntimeDependency(Path.Combine(Path.Combine(LibrariesPath, "SphinxBase.dll"))));         
             }
 
             if (isLibrarySupported)
@@ -99,8 +104,13 @@ namespace UnrealBuildTool.Rules
 
                 string PlatformString = (Target.Platform == UnrealTargetPlatform.Win64) ? "x64" : "x86";
                 string LibrariesPath = Path.Combine(ThirdPartyPath, "PocketSphinx", "Libraries");
+                LibrariesPath = Path.Combine(LibrariesPath, PlatformString);
 
-                PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "PocketSphinx" + PlatformString + ".lib"));
+                PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "PocketSphinx.lib"));
+
+                // TODO: Copy dlls to alternative package directory, to be loaded through a manual process
+                PublicDelayLoadDLLs.Add("PocketSphinx.dll");
+                RuntimeDependencies.Add(new RuntimeDependency(Path.Combine(Path.Combine(LibrariesPath, "PocketSphinx.dll"))));
             }
 
             if (isLibrarySupported)
@@ -114,5 +124,6 @@ namespace UnrealBuildTool.Rules
 
             return isLibrarySupported;
         }
-	}
+
+    }
 }

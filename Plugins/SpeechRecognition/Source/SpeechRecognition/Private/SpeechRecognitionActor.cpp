@@ -3,7 +3,7 @@
 
 #define SPEECHRECOGNITIONPLUGIN ISpeechRecognition::Get()
 
-bool ASpeechRecognitionActor::Init(ESpeechRecognitionLanguage language, TArray<FRecognitionKeyWord> wordList)
+bool ASpeechRecognitionActor::Init(ESpeechRecognitionLanguage language, TArray<FRecognitionPhrase> wordList)
 {
 	// terminate any existing thread
 	if (listenerThread != NULL)
@@ -11,7 +11,7 @@ bool ASpeechRecognitionActor::Init(ESpeechRecognitionLanguage language, TArray<F
 
 	// start listener thread
 	listenerThread = new FSpeechRecognitionWorker();
-	TArray<FRecognitionKeyWord> dictionaryList;
+	TArray<FRecognitionPhrase> dictionaryList;
 	listenerThread->SetLanguage(language);
 	listenerThread->AddWords(wordList);
 	bool threadSuccess = listenerThread->StartThread(this);
@@ -40,6 +40,42 @@ void ASpeechRecognitionActor::WordSpoken_method(FString text)
 	FSimpleDelegateGraphTask::CreateAndDispatchWhenReady
 		(
 		FSimpleDelegateGraphTask::FDelegate::CreateStatic(&WordSpoken_trigger, OnWordSpoken, text)
+		, TStatId()
+		, nullptr
+		, ENamedThreads::GameThread
+		);
+
+
+}
+
+void ASpeechRecognitionActor::StartedSpeaking_trigger(FStartedSpeakingSignature delegate_method)
+{
+	delegate_method.Broadcast();
+}
+
+void ASpeechRecognitionActor::StartedSpeaking_method()
+{
+	FSimpleDelegateGraphTask::CreateAndDispatchWhenReady
+		(
+		FSimpleDelegateGraphTask::FDelegate::CreateStatic(&StartedSpeaking_trigger, OnStartedSpeaking)
+		, TStatId()
+		, nullptr
+		, ENamedThreads::GameThread
+		);
+
+
+}
+
+void ASpeechRecognitionActor::StoppedSpeaking_trigger(FStoppedSpeakingSignature delegate_method)
+{
+	delegate_method.Broadcast();
+}
+
+void ASpeechRecognitionActor::StoppedSpeaking_method()
+{
+	FSimpleDelegateGraphTask::CreateAndDispatchWhenReady
+		(
+		FSimpleDelegateGraphTask::FDelegate::CreateStatic(&StoppedSpeaking_trigger, OnStoppedSpeaking)
 		, TStatId()
 		, nullptr
 		, ENamedThreads::GameThread
