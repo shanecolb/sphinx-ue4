@@ -23,10 +23,10 @@ private:
 public:
 
 	// Basic functions 
-	UFUNCTION(BlueprintCallable, Category = "Audio", meta = (FriendlyName = "Init", Keywords = "Speech Recognition Init"))
-	bool Init(ESpeechRecognitionLanguage language, TArray<FString> wordList);
+	UFUNCTION(BlueprintCallable, Category = "Audio", meta = (DisplayName = "Init", Keywords = "Speech Recognition Init"))
+	bool Init(ESpeechRecognitionLanguage language, TArray<FRecognitionKeyWord> wordList);
 
-	UFUNCTION(BlueprintCallable, Category = "Audio", meta = (FriendlyName = "Shutdown", Keywords = "Speech Recognition Shutdown"))
+	UFUNCTION(BlueprintCallable, Category = "Audio", meta = (DisplayName = "Shutdown", Keywords = "Speech Recognition Shutdown"))
 	bool Shutdown();
 
 	UFUNCTION()

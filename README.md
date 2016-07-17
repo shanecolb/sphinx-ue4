@@ -1,8 +1,13 @@
-# sphinx-ue4
-A speech recognition plugin for Unreal Engine 4. 
-This is essentially a port of the functionality of Pocketsphinx.
-When the plugin is activated, a speech recogntion actor becomes available, which can be added to projects.
-I have included a demo asset within the content folder, to showcase an example of its usage.
+# Sphinx-UE4
+Sphinx-UE4 is a speech recognition plugin for Unreal Engine 4. 
+The plugin makes use of the Pocketsphinx library.
+
+<b>Note:</b> 
+This plugin uses a slightly modified version of PocketSphinx, to support passing in a set of keywords, dynamically.
+The modified code is contained within the _other folder.
+
+# Information
+Please read https://wiki.unrealengine.com/Speech_Recognition_Plugin for usage information.
 
 I would love any feedback/advice on the plugin.
 Feel free to fork the code, or to contact me at shane.colbert@gmail.com

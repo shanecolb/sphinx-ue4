@@ -4,25 +4,61 @@
 #include <sphinxbase/ad.h>
 #include <pocketsphinx.h>
 #include <stdio.h>
+#include <time.h>
+#include <regex>
 #include <string>
+#include <set>
 #include <map>
 #include <fstream>
 #include <iostream>
 #include <cstdio>
 #include <vector>
+#include <utility>
+#include "SpeechRecognitionWorker.generated.h"
 
-//using namespace std;
-
-//General Log
-DECLARE_LOG_CATEGORY_EXTERN(SpeechRecognitionPlugin, Log, All);
 
 UENUM(BlueprintType)
 enum class ESpeechRecognitionLanguage : uint8
 {
-	VE_English 	UMETA(DisplayName = "English")
+	VE_English 	UMETA(DisplayName = "English"),
+	VE_Chinese  UMETA(DisplayName = "Chinese"),
+	VE_French	UMETA(DisplayName = "French")
 };
 
+UENUM(BlueprintType)
+enum class ERecognitionKeywordTollerence : uint8
+{
+	VE_V_LOW 	UMETA(DisplayName = "Very Low"),
+	VE_LOW  	UMETA(DisplayName = "Low"),
+	VE_MEDIUM	UMETA(DisplayName = "Medium"),
+	VE_HIGH	    UMETA(DisplayName = "High"),
+	VE_V_HIGH	UMETA(DisplayName = "Very High")
+};
+
+USTRUCT(BlueprintType)
+struct FRecognitionKeyWord
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(BlueprintReadWrite)
+	FString keyword;
+
+	UPROPERTY(BlueprintReadWrite)
+	ERecognitionKeywordTollerence tollerence;
+
+	FRecognitionKeyWord(){
+
+	}
+};
+
+//General Log
+DECLARE_LOG_CATEGORY_EXTERN(SpeechRecognitionPlugin, Log, All);
+
+#define SENSCR_SHIFT 10
+
 class ASpeechRecognitionActor;
+
+using namespace std;
 
 class FSpeechRecognitionWorker :public FRunnable
 {
@@ -53,9 +89,14 @@ private:
 	//Path to the content folder
 	std::string contentPath_str;
 
-	//Dictionary phrase map
-	TArray<FString> dictionaryList;
-	std::map<std::string, std::string> dictionaryMap;
+	//Stores the recognition keywords, along with their tollerences
+	std::map <string , char*> keywords;
+
+	//Dictionary
+	std::set<std::string> dictionary;
+
+	//Splits a string by whitespace
+	std::vector<std::string> FSpeechRecognitionWorker::Split(std::string s);
 
 public:
 	FSpeechRecognitionWorker();
@@ -66,7 +107,7 @@ public:
 	virtual void Stop();
 	virtual uint32 Run();
 
-	void AddWords(TArray<FString> dictionaryList);
+	void AddWords(TArray<FRecognitionKeyWord> dictionaryList);
 	void SetLanguage(ESpeechRecognitionLanguage language);
 	bool StartThread(ASpeechRecognitionActor* manager);
 

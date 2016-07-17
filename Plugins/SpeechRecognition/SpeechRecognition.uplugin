@@ -15,7 +15,8 @@
 	[
 		{
 			"Name" : "SpeechRecognition",
-			"Type" : "Runtime"
+			"Type" : "Runtime",
+			"LoadingPhase" : "PreDefault"
 		}
 	]
 }
