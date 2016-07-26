@@ -194,11 +194,7 @@ void FSpeechRecognitionWorker::InitConfig() {
 		"-dict", dictionaryPath.c_str(),
 		NULL);
 
-	//ps_default_search_args(config);
-
-	//cmd_ln_set_int_r(config, "-vad_postspeech", 500);
-	// loop over, and set sphinx params
-	
+	// loop over, and set sphinx params	
 	for (FSpeechRecognitionParam param : sphinxParams)
 	{
 		if (param.type == ESpeechRecognitionParamType::VE_FLOAT)
@@ -227,7 +223,7 @@ void FSpeechRecognitionWorker::InitConfig() {
 	}
 	
 	// reset params
-	//sphinxParams.Empty();
+	sphinxParams.Empty();
 
 }
 
