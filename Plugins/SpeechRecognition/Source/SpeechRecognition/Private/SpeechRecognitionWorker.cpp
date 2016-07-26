@@ -300,7 +300,6 @@ void FSpeechRecognitionWorker::ClientMessage(FString text) {
 uint32 FSpeechRecognitionWorker::Run() {
 
 	bool initComplete = false;
-	uint8 prev_in_speech = 0;
 	while (StopTaskCounter.GetValue() == 0) {
 
 		// loop until we have initialised 
@@ -416,23 +415,16 @@ uint32 FSpeechRecognitionWorker::Run() {
 		if ((k = ad_read(ad, adbuf, 1024)) < 0)
 			ClientMessage(FString(TEXT("Failed to read audio")));
 		ps_process_raw(ps, adbuf, k, 0, 0);
-		prev_in_speech = in_speech;
 		in_speech = ps_get_in_speech(ps);
 
-		if (in_speech != prev_in_speech) {
-			if (in_speech) {
-				Manager->StartedSpeaking_method();
-			}
-			else {
-				Manager->StoppedSpeaking_method();
-			}
-		}
-
+		// transition from silence to listening
 		if (in_speech && !utt_started) {
 			utt_started = 1;
 			ClientMessage(FString(TEXT("Listening")));
+			Manager->StartedSpeaking_method();
 		}
 
+		// transition from listening to silence
 		if (!in_speech && utt_started) {
 
 			// obtain a count of the number of frames, and the hypothesis phrase spoken
@@ -441,73 +433,73 @@ uint32 FSpeechRecognitionWorker::Run() {
 			int32 score;
 
 			// re-loop, if there is no hypothesis
-			if (ps_get_hyp(ps, &score) == NULL)
-				continue;
+			if (ps_get_hyp(ps, &score) != NULL) {
 
-			TArray<FString> phraseSet;
-			map<float, std::string> orderedPhrases;
-			map<float, std::string>::iterator it;
 
-			ps_seg_t *iter = ps_seg_iter(ps);
+				TArray<FString> phraseSet;
+				map<float, std::string> orderedPhrases;
+				map<float, std::string>::iterator it;
 
-			// Orders the detected phrases into a map.
-			// Key = seconds from the start of speech recognition detection.
-			// Value = the phrase that was detected.
-			while (iter != NULL) {
-				int32 sf, ef;
-				ps_seg_frames(iter, &sf, &ef);
-				std::string word(ps_seg_word(iter));
-				float startTime = ((float)sf / frame_rate);
-				float endTime = ((float)ef / frame_rate);
-				// For debug purposes. Logs the raw detected phrase + time they were detected
-				UE_LOG(SpeechRecognitionPlugin, Log, TEXT("Word: %s Start Time: %.3f End Time %.3f"), UTF8_TO_TCHAR(word.c_str()), startTime, endTime);
-				orderedPhrases.insert(pair<float, std::string>(startTime, word));
-				iter = ps_seg_next(iter);
-			}
+				ps_seg_t *iter = ps_seg_iter(ps);
 
-			// Loops through the ordered phrases (in detection order).
-			// We only pickup and use the first detection, of each unique phrase. 
-			// This is to handle words defined with multiple phonetic definitions
-			for (it = orderedPhrases.begin(); it != orderedPhrases.end(); ++it) {
-				std::locale loc;
-				std::string originalHypothesis;
-				std::string hypStr = it->second;
-				// This ensures the additional definitions of the same word, are treated the same as one another				
-				for (char c : hypStr) if ((bool)std::isalpha(c, loc) || (int)c == 32) originalHypothesis += c;
-				FString phrase = FString(UTF8_TO_TCHAR(originalHypothesis.c_str()));
-				if (detectionMode == ESpeechRecognitionMode::VE_KEYWORD)
-				{
-					if (!phraseSet.Contains(phrase))
-					{
-						phraseSet.Add(phrase);
-						ClientMessage(phrase);
-						UE_LOG(SpeechRecognitionPlugin, Log, TEXT("Phrases: %s "), *phrase);
-					}
-				}
-				if (detectionMode == ESpeechRecognitionMode::VE_GRAMMAR)
-				{
-					if(phrase != "sil")
-					{
-						phraseSet.Add(phrase);
-						ClientMessage(phrase);
-						UE_LOG(SpeechRecognitionPlugin, Log, TEXT("Phrases: %s "), *phrase);
-					}
+				// Orders the detected phrases into a map.
+				// Key = seconds from the start of speech recognition detection.
+				// Value = the phrase that was detected.
+				while (iter != NULL) {
+					int32 sf, ef;
+					ps_seg_frames(iter, &sf, &ef);
+					std::string word(ps_seg_word(iter));
+					float startTime = ((float)sf / frame_rate);
+					float endTime = ((float)ef / frame_rate);
+					// For debug purposes. Logs the raw detected phrase + time they were detected
+					UE_LOG(SpeechRecognitionPlugin, Log, TEXT("Word: %s Start Time: %.3f End Time %.3f"), UTF8_TO_TCHAR(word.c_str()), startTime, endTime);
+					orderedPhrases.insert(pair<float, std::string>(startTime, word));
+					iter = ps_seg_next(iter);
 				}
 
+				// Loops through the ordered phrases (in detection order).
+				// We only pickup and use the first detection, of each unique phrase. 
+				// This is to handle words defined with multiple phonetic definitions
+				for (it = orderedPhrases.begin(); it != orderedPhrases.end(); ++it) {
+					std::locale loc;
+					std::string originalHypothesis;
+					std::string hypStr = it->second;
+					// This ensures the additional definitions of the same word, are treated the same as one another				
+					for (char c : hypStr) if ((bool)std::isalpha(c, loc) || (int)c == 32) originalHypothesis += c;
+					FString phrase = FString(UTF8_TO_TCHAR(originalHypothesis.c_str()));
+					if (detectionMode == ESpeechRecognitionMode::VE_KEYWORD)
+					{
+						if (!phraseSet.Contains(phrase))
+						{
+							phraseSet.Add(phrase);
+							ClientMessage(phrase);
+							UE_LOG(SpeechRecognitionPlugin, Log, TEXT("Phrases: %s "), *phrase);
+						}
+					}
+					if (detectionMode == ESpeechRecognitionMode::VE_GRAMMAR)
+					{
+						if(phrase != "sil")
+						{
+							phraseSet.Add(phrase);
+							ClientMessage(phrase);
+							UE_LOG(SpeechRecognitionPlugin, Log, TEXT("Phrases: %s "), *phrase);
+						}
+					}
+
+				}
+
+				FRecognisedPhrases recognisedPhrases;
+				recognisedPhrases.phrases = phraseSet;
+				Manager->WordsSpoken_method(recognisedPhrases);
 			}
 
-			FRecognisedPhrases recognisedPhrases;
-			recognisedPhrases.phrases = phraseSet;
-			Manager->WordsSpoken_method(recognisedPhrases);
-
-
-			// start listening for a new phrase
+			// Listening period has ended
 			ps_end_utt(ps);
 			if (ps_start_utt(ps) < 0)
 				ClientMessage(FString(TEXT("Failed to start")));
 			utt_started = 0;
+			Manager->StoppedSpeaking_method();
 		}
-
 	}
 
 	ad_close(ad);
