@@ -6,32 +6,34 @@ IMPLEMENT_MODULE( FSpeechRecognition, SpeechRecognition )
 
 void FSpeechRecognition::StartupModule()
 {
-	//Search project plugins folder for Dll
-	FString dllName = "SphinxBase.dll";
-	if (SearchForDllPath(FPaths::GamePluginsDir(), dllName))
-	{
-	}
-	else if (SearchForDllPath(FPaths::EnginePluginsDir(), dllName)) //Failed in project dir, try engine plugins dir
-	{
-	}
-	else
-	{
-		//Stop loading - plugin required DLL to load successfully
-		checkf(false, TEXT("Failed to load dll"));
-	}
-
-	dllName = "PocketSphinx.dll";
-	if (SearchForDllPath(FPaths::GamePluginsDir(), dllName))
-	{
-	}
-	else if (SearchForDllPath(FPaths::EnginePluginsDir(), dllName)) //Failed in project dir, try engine plugins dir
-	{
-	}
-	else
-	{
-		//Stop loading - plugin required DLL to load successfully
-		checkf(false, TEXT("Failed to load dll"));
-	}
+    if(PLATFORM_WINDOWS) {
+        //Search project plugins folder for Dll
+        FString dllName = "SphinxBase.dll";
+        if (SearchForDllPath(FPaths::GamePluginsDir(), dllName))
+        {
+        }
+        else if (SearchForDllPath(FPaths::EnginePluginsDir(), dllName)) //Failed in project dir, try engine plugins dir
+        {
+        }
+        else
+        {
+            //Stop loading - plugin required DLL to load successfully
+            checkf(false, TEXT("Failed to load dll"));
+        }
+        
+        dllName = "PocketSphinx.dll";
+        if (SearchForDllPath(FPaths::GamePluginsDir(), dllName))
+        {
+        }
+        else if (SearchForDllPath(FPaths::EnginePluginsDir(), dllName)) //Failed in project dir, try engine plugins dir
+        {
+        }
+        else
+        {
+            //Stop loading - plugin required DLL to load successfully
+            checkf(false, TEXT("Failed to load dll"));
+        }
+    }
 }
 
 bool FSpeechRecognition::SearchForDllPath(FString _searchBase, FString _dllName)

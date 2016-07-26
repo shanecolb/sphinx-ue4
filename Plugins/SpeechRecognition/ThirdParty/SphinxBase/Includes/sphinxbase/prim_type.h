@@ -129,8 +129,8 @@ typedef unsigned __int64 uint64;
 typedef long long	   int64;
 typedef unsigned long long uint64;
 #else /* !HAVE_LONG_LONG && SIZEOF_LONG_LONG == 8 */
-typedef double          int64;
-typedef double          uint64;
+typedef long long       int64;
+typedef unsigned long long       uint64;
 #endif /* !HAVE_LONG_LONG && SIZEOF_LONG_LONG == 8 */
 
 #ifndef TRUE

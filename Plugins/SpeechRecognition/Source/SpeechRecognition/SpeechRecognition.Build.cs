@@ -82,6 +82,19 @@ namespace UnrealBuildTool.Rules
                 RuntimeDependencies.Add(new RuntimeDependency(Path.Combine(Path.Combine(LibrariesPath, "SphinxBase.dll"))));         
             }
 
+            if (Target.Platform == UnrealTargetPlatform.Mac)
+            {
+                isLibrarySupported = true;
+
+                string LibraryPath = Path.Combine(ThirdPartyPath, "SphinxBase", "Libraries");
+
+                LibraryPath = Path.Combine(LibraryPath, "osx");
+
+PublicAdditionalLibraries.Add(Path.Combine(LibraryPath, "libopenal.dylib"));
+PublicAdditionalLibraries.Add(Path.Combine(LibraryPath, "libsphinxad.a"));
+PublicAdditionalLibraries.Add(Path.Combine(LibraryPath, "libsphinxbase.a"));
+            }
+
             if (isLibrarySupported)
             {
                 // Include path
@@ -111,6 +124,17 @@ namespace UnrealBuildTool.Rules
                 // TODO: Copy dlls to alternative package directory, to be loaded through a manual process
                 PublicDelayLoadDLLs.Add("PocketSphinx.dll");
                 RuntimeDependencies.Add(new RuntimeDependency(Path.Combine(Path.Combine(LibrariesPath, "PocketSphinx.dll"))));
+            }
+
+            if (Target.Platform == UnrealTargetPlatform.Mac)
+            {
+                isLibrarySupported = true;
+
+                string LibraryPath = Path.Combine(ThirdPartyPath, "PocketSphinx", "Libraries");
+
+                LibraryPath = Path.Combine(LibraryPath, "osx");
+
+                PublicAdditionalLibraries.Add(Path.Combine(LibraryPath, "libpocketsphinx.a"));
             }
 
             if (isLibrarySupported)
