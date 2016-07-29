@@ -9,6 +9,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FStartedSpeakingSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FStoppedSpeakingSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWordsSpokenSignature, FRecognisedPhrases, Text);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FUnknownPhraseSignature);
 
 UCLASS(BlueprintType, Blueprintable)
 class SPEECHRECOGNITION_API ASpeechRecognitionActor : public AActor
@@ -22,6 +23,7 @@ private:
 	FSpeechRecognitionWorker* listenerThread;
 
 	static void WordsSpoken_trigger(FWordsSpokenSignature delegate_method, FRecognisedPhrases text);
+	static void UnknownPhrase_trigger(FUnknownPhraseSignature delegate_method);
 	static void StartedSpeaking_trigger(FStartedSpeakingSignature delegate_method);
 	static void StoppedSpeaking_trigger(FStoppedSpeakingSignature delegate_method);
 
@@ -50,6 +52,12 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Audio")
 	FWordsSpokenSignature OnWordsSpoken;
+
+	UFUNCTION()
+	void UnknownPhrase_method();
+
+	UPROPERTY(BlueprintAssignable, Category = "Audio")
+	FUnknownPhraseSignature OnUnknownPhrase;
 
 	UFUNCTION()
 	void StartedSpeaking_method();
