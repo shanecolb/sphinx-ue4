@@ -76,6 +76,22 @@ void ASpeechRecognitionActor::WordsSpoken_method(FRecognisedPhrases text)
 			);
 }
 
+void ASpeechRecognitionActor::UnknownPhrase_trigger(FUnknownPhraseSignature delegate_method)
+{
+	delegate_method.Broadcast();
+}
+
+void ASpeechRecognitionActor::UnknownPhrase_method()
+{
+	FSimpleDelegateGraphTask::CreateAndDispatchWhenReady
+		(
+			FSimpleDelegateGraphTask::FDelegate::CreateStatic(&UnknownPhrase_trigger, OnUnknownPhrase)
+			, TStatId()
+			, nullptr
+			, ENamedThreads::GameThread
+			);
+}
+
 void ASpeechRecognitionActor::StartedSpeaking_trigger(FStartedSpeakingSignature delegate_method)
 {
 	delegate_method.Broadcast();

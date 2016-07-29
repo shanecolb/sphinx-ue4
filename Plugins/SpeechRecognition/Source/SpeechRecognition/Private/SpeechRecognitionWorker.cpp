@@ -221,7 +221,7 @@ void FSpeechRecognitionWorker::InitConfig() {
 			cmd_ln_set_int_r(config, param.name, atoi(param.value));
 		}
 	}
-	
+
 	// reset params
 	sphinxParams.Empty();
 
@@ -252,7 +252,7 @@ bool FSpeechRecognitionWorker::SetConfigParam(FString param, ESpeechRecognitionP
 			sphinxParams.Add(sphinxParam);
 			return true;
 		}
-		if(value.Equals("false", ESearchCase::IgnoreCase)) {
+		if (value.Equals("false", ESearchCase::IgnoreCase)) {
 			paramValue = "0";
 			FSpeechRecognitionParam sphinxParam(paramName, type, paramValue);
 			sphinxParams.Add(sphinxParam);
@@ -478,7 +478,7 @@ uint32 FSpeechRecognitionWorker::Run() {
 					}
 					if (detectionMode == ESpeechRecognitionMode::VE_GRAMMAR)
 					{
-						if(phrase != "sil")
+						if (phrase != "sil")
 						{
 							phraseSet.Add(phrase);
 							ClientMessage(phrase);
@@ -491,6 +491,9 @@ uint32 FSpeechRecognitionWorker::Run() {
 				FRecognisedPhrases recognisedPhrases;
 				recognisedPhrases.phrases = phraseSet;
 				Manager->WordsSpoken_method(recognisedPhrases);
+			}
+			else {
+				Manager->UnknownPhrase_method();
 			}
 
 			// Listening period has ended
