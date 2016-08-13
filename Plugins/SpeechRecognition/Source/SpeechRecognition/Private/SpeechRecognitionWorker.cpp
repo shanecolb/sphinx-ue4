@@ -8,7 +8,8 @@ FSpeechRecognitionWorker::FSpeechRecognitionWorker() {}
 
 vector<string> FSpeechRecognitionWorker::Split(string s) {
 	std::locale loc;
-	regex r("\\s+");
+    const char* regexStr = (char*)"\\s+";
+	regex r(regexStr);
 	auto words_begin = std::sregex_iterator(s.begin(), s.end(), r);
 	auto words_end = std::sregex_iterator();
 
@@ -203,11 +204,11 @@ void FSpeechRecognitionWorker::InitConfig() {
 		}
 		if (param.type == ESpeechRecognitionParamType::VE_BOOLEAN)
 		{
-			if (stricmp(param.value, "0") == 0)
+			if (strcmp(param.value, "0") == 0)
 			{
 				cmd_ln_set_boolean_r(config, param.name, false);
 			}
-			if (stricmp(param.value, "1") == 0)
+			if (strcmp(param.value, "1") == 0)
 			{
 				cmd_ln_set_boolean_r(config, param.name, true);
 			}
@@ -247,13 +248,13 @@ bool FSpeechRecognitionWorker::SetConfigParam(FString param, ESpeechRecognitionP
 	if (type == ESpeechRecognitionParamType::VE_BOOLEAN)
 	{
 		if (value.Equals("true", ESearchCase::IgnoreCase)) {
-			paramValue = "1";
+			paramValue = (char*)"1";
 			FSpeechRecognitionParam sphinxParam(paramName, type, paramValue);
 			sphinxParams.Add(sphinxParam);
 			return true;
 		}
 		if (value.Equals("false", ESearchCase::IgnoreCase)) {
-			paramValue = "0";
+			paramValue = (char*)"0";
 			FSpeechRecognitionParam sphinxParam(paramName, type, paramValue);
 			sphinxParams.Add(sphinxParam);
 			return true;
