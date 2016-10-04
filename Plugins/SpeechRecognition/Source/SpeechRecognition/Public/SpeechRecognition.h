@@ -74,7 +74,7 @@ struct FRecognitionPhrase
 	}
 
 	// if you wish to only provide a phrase
-	FRecognitionPhrase(FString keyword) {
+	FRecognitionPhrase(FString phrase) {
 		this->phrase = phrase;
 		tolerance = EPhraseRecognitionTolerance::VE_5;
 	}
